@@ -11,7 +11,7 @@ library("TSA")
 Data yang digunakan adalah data laporan mingguan rata-rata Harga Komoditas Telur di seluruh provinsi di Indonesia dalam 139 pekan (pekan 1 Januari 2021 hingga pekan 4 Agustus 2023)
 ```{r}
 library(rio)
-data1 <- import("https://raw.githubusercontent.com/karimatuain/mpdw/main/Praktikum%201/Data%20MPDW%201.csv")
+data1 <- import("https://raw.githubusercontent.com/karimatuain/mpdw/main/Data/Data%20MPDW%201.csv")
 data1
 str(data1)
 dim(data1)
