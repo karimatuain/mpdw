@@ -37,6 +37,7 @@ ts.plot(data1.ts, xlab="Periode Waktu (Mingguan)", ylab="Harga Telur",
         main = "Perkembangan Harga Telur per Minggu (1/1/2021 - 31/8/23)")
 points(data1.ts)
 ```
+Tampak plot harga telur diatas menunjukkan bahwa data memiliki pola data tren. Meskipun harga telur fluktuatif namun rata-rata harganya cenderung memiliki tren harga meningkat setiap waktu.
 
 #membagi data latih dan data uji (data latih 80%, data uji 20%)
 ```{r}
@@ -60,82 +61,12 @@ ggplot() +
   theme_bw() + theme(legend.position = "right",
                      plot.caption = element_text(hjust=0.5, size=12))
 ```
-# Percobaan Pemulusan dengan Single Moving Average (SMA)
 
-Ide dasar dari Single Moving Average (SMA) adalah data suatu periode dipengaruhi oleh data periode sebelumnya. Metode pemulusan ini cocok digunakan untuk pola data stasioner atau konstan. Prinsip dasar metode pemulusan ini adalah data pemulusan pada periode ke-t merupakan rata rata dari m buah data pada periode ke-t hingga periode ke (t-m+1). Data pemulusan pada periode ke-t selanjutnya digunakan sebagai nilai peramalan pada periode ke t+1
-
-Pemulusan menggunakan metode SMA dilakukan dengan fungsi `SMA()`. Dalam hal ini akan dilakukan pemulusan dengan parameter `m=4`.
-
-```{r}
-data.sma<-SMA(train_ma.ts, n=4)
-data.sma
-```
-# forecast 1 periode ke depan
-Data pemulusan pada periode ke-t selanjutnya digunakan sebagai nilai peramalan pada periode ke t+1 sehingga hasil peramalan 1 periode kedepan adalah sebagai berikut.
-
-```{r}
-data.ramal<-c(NA,data.sma)
-data.ramal 
-```
-
-# forecast 28 periode
-Selanjutnya akan dilakukan peramalan sejumlah data uji yaitu 28 periode. Pada metode SMA, hasil peramalan 28 periode ke depan akan bernilai sama dengan hasil peramalan 1 periode kedepan. Dalam hal ini akan dilakukan penggabungan data aktual train, data hasil pemulusan dan data hasil ramalan 28 periode kedepan.
-
-```{r}
-data.gab<-cbind(aktual=c(train_ma.ts,rep(NA,28)),pemulusan=c(data.sma,rep(NA,28)),ramalan=c(data.ramal,rep(data.ramal[length(data.ramal)],27)))
-data.gab 
-```
-
-#Plot hasil peramlan 
-Adapun plot data deret waktu dari hasil peramalan yang dilakukan adalah sebagai berikut.
-
-```{r}
-ts.plot(data1.ts, xlab="Periode Waktu (Mingguan)", ylab="Harga Telur", main= "SMA N=4 Data Harga Telur")
-points(data1.ts)
-lines(data.gab[,2],col="blue",lwd=2)
-lines(data.gab[,3],col="red",lwd=2)
-legend("topleft",c("data aktual","data pemulusan","data peramalan"), lty=8, col=c("black","blue","red"), cex=0.5)
-```
-
-#Menghitung nilai keakuratan data latih (SMA)
-
-Selanjutnya perhitungan akurasi dilakukan dengan ukuran akurasi *Sum Squares Error* (SSE), *Mean Square Error* (MSE) dan *Mean Absolute Percentage Error* (MAPE). Perhitungan akurasi dilakukan baik pada data latih maupun pada data uji.
-
-```{r}
-error_train.sma = train_ma.ts-data.ramal[1:length(train_ma.ts)]
-SSE_train.sma = sum(error_train.sma[5:length(train_ma.ts)]^2)
-MSE_train.sma = mean(error_train.sma[5:length(train_ma.ts)]^2)
-MAPE_train.sma = mean(abs((error_train.sma[5:length(train_ma.ts)]/train_ma.ts[5:length(train_ma.ts)])*100))
-
-akurasi_train.sma <- matrix(c(SSE_train.sma, MSE_train.sma, MAPE_train.sma))
-row.names(akurasi_train.sma)<- c("SSE", "MSE", "MAPE")
-colnames(akurasi_train.sma) <- c("Akurasi m = 4")
-akurasi_train.sma
-```
-
-Dalam hal ini nilai MAPE data latih pada metode pemulusan SMA lebih dari 2%, nilai ini dapat dikategorikan sebagai nilai akurasi yang ......... Selanjutnya dilakukan perhitungan nilai MAPE data uji pada metode pemulusan SMA.
-
-
-#Menghitung nilai keakuratan data uji
-```{r}
-error_test.sma = test_ma.ts-data.gab[112:139,3]
-SSE_test.sma = sum(error_test.sma^2)
-MSE_test.sma = mean(error_test.sma^2)
-MAPE_test.sma = mean(abs((error_test.sma/test_ma.ts*100)))
-
-akurasi_test.sma <- matrix(c(SSE_test.sma, MSE_test.sma, MAPE_test.sma))
-row.names(akurasi_test.sma)<- c("SSE", "MSE", "MAPE")
-colnames(akurasi_test.sma) <- c("Akurasi m = 4")
-akurasi_test.sma
-```
-
-Perhitungan akurasi menggunakan data latih menghasilkan nilai MAPE yang kurang dari 10% sehingga nilai akurasi ini dapat dikategorikan sebagai sangat baik.
-
-
-#Percobaan pemulusan dengan Motode Double Moving Average (DMA)
+# Percobaan pemulusan dengan Motode Double Moving Average (DMA)
 Plot data menunjukkan adanya trend yang cenderung naik sehingga metode pemulusan Double Moving Average (DMA) dirasa lebih cocok digunakan. Proses pemulusan dengan rata rata dalam metode ini dilakukan sebanyak 2 kali.
 
 ```{r}
+data.sma<-SMA(train_ma.ts, n=4)
 dma <- SMA(data.sma, n = 4)
 At <- 2*data.sma - dma
 Bt <- 2/(4-1)*(data.sma - dma)
@@ -154,17 +85,17 @@ data.gab
 
 ```
 
-#Hasil pemulusan menggunakan metode DMA divisualisasikan sebagai berikut
+# Hasil pemulusan menggunakan metode DMA divisualisasikan sebagai berikut
 
 ```{r}
-ts.plot(data1.ts, xlab="Periode Waktu (Mingguan)", ylab="Harga Telur", main= "DMA N=4 Data Hrga Telur")
+ts.plot(data1.ts, xlab="Periode Waktu (Mingguan)", ylab="Harga Telur", main= "DMA N=4 Data Harga Telur")
 points(data1.ts)
-lines(data.gab[,3],col="green",lwd=2)
+lines(data.gab[,3],col="blue",lwd=2)
 lines(data.gab[,6],col="red",lwd=2)
-legend("topleft",c("data aktual","data pemulusan","data peramalan"), lty=8, col=c("black","green","red"), cex=0.8)
+legend("topleft",c("data aktual","data pemulusan","data peramalan"), lty=8, col=c("black","blue","red"), cex=0.8)
 
 ```
-#Menghitung nilai keakuratan data latih (DMA)
+# Menghitung nilai keakuratan data latih (DMA)
 Selanjutnya perhitungan akurasi dilakukan baik pada data latih maupun data uji. Perhitungan akurasi dilakukan dengan ukuran akurasi SSE, MSE dan MAPE.
 
 ```{r}
@@ -181,8 +112,10 @@ akurasi_train.dma
 
 Perhitungan akurasi pada data latih menggunakan nilai MAPE menghasilkan nilai MAPE yang kurang dari 10% sehingga dikategorikan sangat baik. Selanjutnya, perhitungan nilai akurasi dilakukan pada data uji.
 
+
+#Menghitung nilai keakuratan data uji (DMA)
+
 ```{r}
-#Menghitung nilai keakuratan data uji
 error_test.dma = test_ma.ts-data.gab[112:139,6]
 SSE_test.dma = sum(error_test.dma^2)
 MSE_test.dma = mean(error_test.dma^2)
@@ -196,33 +129,34 @@ akurasi_test.dma
 
 Perhitungan akurasi menggunakan data latih menghasilkan nilai MAPE yang kurang dari 10% sehingga nilai akurasi ini dapat dikategorikan sebagai sangat baik.
 
-Pada data latih, metode SMA lebih baik dibandingkan dengan metode DMA, sedangkan pada data uji, metode DMA lebih baik dibandingkan SMA
+### Percobaan Pemulusan dengan metode Double Exponential Smoothing (DES)
 
-#DES
-
-### DES
-
-Metode pemulusan *Double Exponential Smoothing* (DES) digunakan untuk data yang memiliki pola tren. Metode DES adalah metode semacam SES, hanya saja dilakukan dua kali, yaitu pertama untuk tahapan 'level' dan kedua untuk tahapan 'tren'. Pemulusan menggunakan metode ini akan menghasilkan peramalan tidak konstan untuk periode berikutnya.
+Metode pemulusan (DES) digunakan untuk data yang memiliki pola tren. Metode DES adalah metode semacam SES, hanya saja dilakukan dua kali, yaitu pertama untuk tahapan 'level' dan kedua untuk tahapan 'tren'. Pemulusan menggunakan metode ini akan menghasilkan peramalan tidak konstan untuk periode berikutnya.
 
 Untuk mendapatkan nilai parameter optimum dari DES, argumen `alpha` dan `beta` dapat dibuat `NULL` seperti berikut.
 
+# Lamda dan gamma optimum
 ```{r}
-#Lamda dan gamma optimum
 des.opt<- HoltWinters(train_ma.ts, gamma = FALSE)
 des.opt
 plot(des.opt)
 
-#ramalan
+# ramalan
 ramalandesopt<- forecast(des.opt, h=28)
 ramalandesopt
 ```
+# Plot untuk mengevaluasi prediksi
+```{r}
+plot(data1.ts)
+lines(des.opt$fitted[,1], lty=2, col="blue")
+lines(ramalandesopt$mean, col="red")
+```
+
 
 Selanjutnya akan dilakukan perhitungan akurasi pada data latih maupun data uji dengan ukuran akurasi SSE, MSE dan MAPE.
-
-#### Akurasi Data Latih
+#### Akurasi Data Latih (DES)
 
 ```{r}
-#Akurasi Data Training
 ssedes.train<-des.opt$SSE
 msedes.train<-ssedes.train/length(train_ma.ts)
 sisaandes<-ramalandesopt$residuals
@@ -236,7 +170,7 @@ row.names(akurasides.opt)<- c("SSE", "MSE", "MAPE")
 colnames(akurasides.opt) <- c("Akurasi (optimum) lambda=0.48 dan gamma=0.03")
 akurasides.opt
 ```
-#### Akurasi Data Uji
+#### Akurasi Data Uji (DES)
 
 ```{r}
 selisihdesopt<-ramalandesopt$mean-testing_ma$Harga
@@ -254,3 +188,6 @@ colnames(akurasitestingdes) <- c("DES optimum")
 akurasitestingdes
 ```
 
+Perhitungan akurasi menggunakan data latih dan data uji menghasilkan nilai MAPE yang kurang dari 10% sehingga nilai akurasi ini dapat dikategorikan sebagai sangat baik.
+
+Dari dua metode pemulusan data tren yang telah dicobakan (DMA dan DES) seluruhnya mendapat nilai akurasi (MAPE) kurang dari 10% pada data latih maupun data uji sehingga kedua metode tersebut dikategorikan peramalan sangat baik berdasarkan nilai MAPE-nya.
