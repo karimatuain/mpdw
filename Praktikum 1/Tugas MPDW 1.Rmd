@@ -204,26 +204,6 @@ Pada data latih, metode SMA lebih baik dibandingkan dengan metode DMA, sedangkan
 
 Metode pemulusan *Double Exponential Smoothing* (DES) digunakan untuk data yang memiliki pola tren. Metode DES adalah metode semacam SES, hanya saja dilakukan dua kali, yaitu pertama untuk tahapan 'level' dan kedua untuk tahapan 'tren'. Pemulusan menggunakan metode ini akan menghasilkan peramalan tidak konstan untuk periode berikutnya.
 
-Pemulusan dengan metode DES kali ini akan menggunakan fungsi `HoltWinters()` . Jika sebelumnya nilai argumen `beta` dibuat `FALSE` , kali ini argumen tersebut akan diinisialisasi bersamaan dengan nilai `alpha` .
-
-```{r}
-#Lamda=0.2 dan gamma=0.2
-des.1<- HoltWinters(train.ts, gamma = FALSE, beta = 0.2, alpha = 0.2)
-plot(des.1)
-
-#ramalan
-ramalandes1<- forecast(des.1, h=10)
-ramalandes1
-
-#Lamda=0.6 dan gamma=0.3
-des.2<- HoltWinters(train.ts, gamma = FALSE, beta = 0.3, alpha = 0.6)
-plot(des.2)
-
-#ramalan
-ramalandes2<- forecast(des.2, h=10)
-ramalandes2
-```
-
 Untuk mendapatkan nilai parameter optimum dari DES, argumen `alpha` dan `beta` dapat dibuat `NULL` seperti berikut.
 
 ```{r}
