@@ -1,1 +1,173 @@
+---
+title: "Tugas MPDW 5"
+author: "Karimatu Ain G1401211001 P2"
+date: "2023-10-02"
+output: html_document
+---
 
+```{r}
+library(ggplot2)
+library(tsibble)
+library(tseries)
+library(MASS)
+```
+
+### Input Data Penuh
+
+```{r}
+library(rio)
+datta<-rio::import("https://raw.githubusercontent.com/karimatuain/mpdw/main/Data/Data%20MPDW%201.csv")
+datta<-datta$Harga
+datta<-ts(datta)
+```
+
+#### Plot Time Series Data Penuh
+
+```{r}
+plot_datta <- datta |> as_tsibble() |> 
+  ggplot(aes(x = index , y = value)) + geom_line() + theme_bw() +
+  xlab("Periode") + ylab("Harga")
+plot_datta
+mean(datta)
+```
+
+Plot deret waktu di atas menunjukkan bahwa data tampak stasioner, ditandai dengan data yang menyebar di sekitar nilai tengahnya (28108) namun tidak stasioner dalam ragam, ditandai dengan lebar pita yang bervariasi.
+
+#### Plot ACF Data Penuh
+
+```{r}
+acf(datta)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut cenderung *slow tails off* dan tidak membentuk gelombang sinus.
+
+#### Uji ADF Data Penuh
+
+```{r}
+tseries::adf.test(datta)
+```
+
+$H_0$ : Data Penuh tidak stasioner dalam rataan
+
+$H_1$ : Data Penuh stasioner dalam rataan
+
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.03 yang lebih kecil dari taraf nyata 5% sehingga tolak $H_0$ dan menandakan bahwa data stasioner dalam rataan. Hal ini sama dengan hasil eksplorasi menggunakan plot time series namun berbeda dengan hasil plot ACF.
+
+#### Plot Box-Cox Data Penuh
+
+```{r}
+index <- seq(1:139)
+bc = boxcox(datta~index, lambda = seq(-2,2,by=0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **-0.02** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-1.19** dan batas atas **1.07**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data penuh stasioner dalam ragam.
+
+### Partisi Data 1
+
+```{r}
+datta1 <- datta[1:80] |> ts()
+mean(datta1)
+```
+
+#### Plot Time Series Partisi 1
+
+```{r}
+datta1 |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Nilai")
+```
+
+Plot deret waktu di atas menunjukkan bahwa data cenderung stasioner dalam rataan, ditandai dengan data yang menyebar di sekitar nilai tengahnya (26523) namun tidak stasioner dalam ragam, ditandai dengan lebar pita yang bervariasi.
+
+#### Plot ACF Data Partisi 1
+
+```{r}
+acf(datta1)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data partisi tersebut cenderung *tails off* dan membentuk gelombang sinus.
+
+#### Uji ADF Data Partisi 1
+
+```{r}
+tseries::adf.test(datta1)
+```
+
+$H_0$ : Data Partisi 1 tidak stasioner dalam rataan
+
+$H_1$ : Data Partisi 1 stasioner dalam rataan
+
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.3 yang lebih besar dari taraf nyata 5% sehingga tak tolak $H_0$ dan menandakan bahwa data partisi 1 tidak stasioner dalam rataan. Hal ini berbeda dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+#### Plot Box-Cox Data Partisi 1
+
+```{r}
+index1 <- seq(1:80)
+bc1 = boxcox(datta1~index1, lambda = seq(-6,4,by=0.01))
+#Nilai Rounded Lambda
+lambda1 <- bc1$x[which.max(bc1$y)]
+lambda1
+#SK
+bc1$x[bc1$y > max(bc1$y) - 1/2 * qchisq(.95,1)]
+```
+
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **-3.26** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-5.48** dan batas atas **-1.33**. Selang tersebut tidak memuat nilai satu sehingga dapat dikatakan bahwa data partisi 1 tidak stasioner dalam ragam.
+
+### Partisi Data 2
+
+```{r}
+datta2 <- datta[81:139] |> ts()
+mean(datta2)
+var(datta2)
+```
+
+#### Plot Time Series Partisi 2
+
+```{r}
+datta2 |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Nilai")
+```
+
+Plot deret waktu di atas menunjukkan bahwa data stasioner dalam rataan, ditandai dengan data yang menyebar di sekitar nilai tengahnya (30258) namun tidak stasioner dalam ragam, ditandai dengan lebar pita yang bervariasi.
+
+#### Plot ACF Data Partisi 2
+
+```{r}
+acf(datta2)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data partisi tersebut cenderung *tails off* dan membentuk gelombang sinus.
+
+#### Uji ADF Data Partisi 2
+
+```{r}
+tseries::adf.test(datta2,k=4)
+```
+
+$H_0$ : Data Partisi 2 tidak stasioner dalam rataan
+
+$H_1$ : Data Partisi 2 stasioner dalam rataan
+
+Berdasarkan uji ADF dengan lag=4 tersebut, didapat *p-value* sebesar 0.04 yang lebih kecil dari taraf nyata 5% sehingga tolak $H_0$ dan menandakan bahwa data partisi 1 stasioner dalam rataan. Hal ini sama dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+#### Plot Box-Cox Data Partisi 2
+
+```{r}
+index2 <- seq(1:59)
+bc2 = boxcox(datta2~index2, lambda = seq(-5,13,by=0.1))
+#Nilai Rounded Lambda
+lambda2 <- bc2$x[which.max(bc2$y)]
+lambda2
+#SK
+bc2$x[bc2$y > max(bc2$y) - 1/2 * qchisq(.95,1)]
+```
+
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **4.4** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-2.6** dan batas atas **11.6**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data partisi 2 stasioner dalam ragam.
